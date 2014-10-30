@@ -7,6 +7,7 @@ import (
 	"fmt"
 )
 
+// Identifier is an interface for setting and getting uids
 type Identifier interface {
 	Id() Uid
 	SetId(uid Uid)
@@ -37,14 +38,14 @@ var timestampOffset uint32 = nodeOffset - 32
 // New creates a new unique identifier taking into account
 // the uid's type, the node which created this uid, the timestamp
 // of the creation and an offset to ensure uniqueness
-func New(uidType int64, nodeId int64, timestamp int64, offset int64) (Uid, error) {
+func New(uidType int64, Node int64, timestamp int64, offset int64) (Uid, error) {
 	var err error
 
 	if int64(timestamp) > maxSignedValue(32) {
 		return 0, errors.New("Timestamp overflow")
 	}
 
-	if int64(nodeId) > maxUnSignedValue(8) {
+	if int64(Node) > maxUnSignedValue(8) {
 		return 0, errors.New("Node overflow")
 	}
 
@@ -57,27 +58,32 @@ func New(uidType int64, nodeId int64, timestamp int64, offset int64) (Uid, error
 	}
 
 	return Uid(((int64(uidType) & int64(511)) << (typeOffset)) |
-			((int64(nodeId) & int64(255)) << (nodeOffset)) |
+			((int64(Node) & int64(255)) << (nodeOffset)) |
 			((int64(timestamp) & int64(0xFFFFFFFF)) << (timestampOffset)) |
 			(int64(offset) & int64(16383))), err
 }
 
+// Type returns the uid's type
 func (t Uid) Type() int64 {
 	return ((int64(t) >> (typeOffset)) & int64(0x1FF))
 }
 
-func (t Uid) NodeId() int64 {
+// Node returns the node on which this uid has been created on
+func (t Uid) Node() int64 {
 	return ((int64(t) >> (nodeOffset)) & int64(0x1F))
 }
 
+// Timestamp returns the timestamp of this uid
 func (t Uid) Timestamp() int64 {
 	return ((int64(t) >> (timestampOffset)) & int64(0xFFFFFFFF))
 }
 
+// Offset returns the unique offset of this uid
 func (t Uid) Offset() int64 {
 	return (int64(t) & int64(0xFFFF))
 }
 
+// String: Uid implements the Stringer interface
 func (t Uid) String() string {
 	fmt.Printf("%d\n", int64(t))
 	fmt.Printf("%s\n", strconv.FormatInt(int64(t), 10))

@@ -3,11 +3,13 @@ package uid
 import (
 	"time"
 	"sync"
-	"fmt"
 )
 
+// Service represents a RPC node for creating uids
 type Service struct {
+	// Needed for locking count
 	sync.Mutex
+
 	// Current count relative to timestamp
 	count                int64
 	timestampForCounting int64
@@ -16,11 +18,12 @@ type Service struct {
 	Id             int64
 }
 
+// CreatorArguments is a structure for the RPC Create function
 type CreatorArguments struct {
 	Type  int64
 }
 
-//
+// Create is a RPC wrapper for uid's New method
 func (t *Service) Create(args *CreatorArguments, reply *Uid) error {
 	now := int64(time.Now().Unix())
 
@@ -34,9 +37,6 @@ func (t *Service) Create(args *CreatorArguments, reply *Uid) error {
 	t.Mutex.Unlock()
 
 	*reply, _ = New(args.Type, t.Id, now, t.count)
-
-	fmt.Printf("Identifier %s (%d) requested with params id=%d type=%d timestamp=%d count=%d\n", reply, reply, t.Id, args.Type, now, t.count)
-	fmt.Printf("Identifier %s (%d) created with params id=%d type=%d timestamp=%d count=%d\n", reply, reply, reply.NodeId(), reply.Type(), reply.Timestamp(), reply.Offset())
 
 	return nil
 }
