@@ -16,7 +16,6 @@ func main() {
 	}
 
 	args := &uid.CreatorArguments{7}
-
 	res := make(chan *rpc.Call, count)
 
 	//var result uid.Uid
@@ -29,9 +28,11 @@ func main() {
 	}
 
 	for call := range res {
+		var result *uid.Uid
 		if call.Error != nil {
 			log.Fatal("Server error: ", err)
 		}
-		fmt.Printf("Identifier %s %d created \n", call.Reply.(*uid.Uid), call.Reply.(*uid.Uid).Creator())
+		result = call.Reply.(*uid.Uid)
+		fmt.Printf("Identifier %s %d created \n", result, result)
 	}
 }
