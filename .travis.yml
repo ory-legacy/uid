@@ -2,3 +2,7 @@ language: go
 
 go:
   - tip
+
+install: go get -d -v ./src/... && go build -v ./src/...
+
+script: go test ./src/...
