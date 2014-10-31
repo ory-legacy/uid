@@ -1,11 +1,11 @@
-package main
+package server
 
 import (
 	"net/rpc"
 	"net"
 	"net/http"
 	"log"
-	"uid"
+	"github.com/baldur-io/uid"
 )
 
 func main() {

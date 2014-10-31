@@ -1,10 +1,10 @@
-package main
+package client
 
 import (
 	"log"
 	"net/rpc"
 	"fmt"
-	"uid"
+	"github.com/baldur-io/uid"
 )
 
 func main() {
