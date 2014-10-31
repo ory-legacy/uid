@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"math"
 	"errors"
-	"fmt"
 )
 
 // Identifier is an interface for setting and getting uids
@@ -89,8 +88,6 @@ func (t Uid) Offset() int64 {
 
 // String: Uid implements the Stringer interface
 func (t Uid) String() string {
-	fmt.Printf("%d\n", int64(t))
-	fmt.Printf("%s\n", strconv.FormatInt(int64(t), 10))
 	return strconv.FormatInt(int64(t), 10)
 }
 
