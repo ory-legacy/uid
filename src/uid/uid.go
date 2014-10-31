@@ -22,18 +22,22 @@ var serializationOffset uint32 = 64 - 1
 // Next 9 bits are type
 // Maximum value: 511
 var typeOffset uint32 = serializationOffset - 9
+var typeMaxValue int64 = maxUnSignedValue(9)
 
 // Next 8 bits are node id (the service node which created this uid)
 // Maximum value: 255
-var nodeOffset uint32 = typeOffset - 6
+var nodeOffset uint32 = typeOffset - 8
+var nodeMaxValue int64 = maxUnSignedValue(8)
 
 // Next 32 bits are the timestamp
-// Maximum value: int32
+// Maximum value: signed int32
 var timestampOffset uint32 = nodeOffset - 32
+var timestampMaxValue int64 = maxSignedValue(32)
 
 // Next 14 bits are the offset (or "microtime") to ensure uniqueness
 // Maximum value: 16383
 // var uniqueOffset = timestampOffset - 14
+var uniqueOffsetMaxValue int64 = maxUnSignedValue(14)
 
 // New creates a new unique identifier taking into account
 // the uid's type, the node which created this uid, the timestamp
@@ -41,46 +45,46 @@ var timestampOffset uint32 = nodeOffset - 32
 func New(uidType int64, Node int64, timestamp int64, offset int64) (Uid, error) {
 	var err error
 
-	if int64(timestamp) > maxSignedValue(32) {
+	if int64(timestamp) > timestampMaxValue {
 		return 0, errors.New("Timestamp overflow")
 	}
 
-	if int64(Node) > maxUnSignedValue(8) {
+	if int64(Node) > nodeMaxValue {
 		return 0, errors.New("Node overflow")
 	}
 
-	if int64(uidType) > maxUnSignedValue(9) {
+	if int64(uidType) > typeMaxValue {
 		return 0, errors.New("Type overflow")
 	}
 
-	if int64(offset) > maxUnSignedValue(14) {
+	if int64(offset) > uniqueOffsetMaxValue {
 		return 0, errors.New("Offset overflow")
 	}
 
-	return Uid(((int64(uidType) & int64(511)) << (typeOffset)) |
-			((int64(Node) & int64(255)) << (nodeOffset)) |
-			((int64(timestamp) & int64(0xFFFFFFFF)) << (timestampOffset)) |
-			(int64(offset) & int64(16383))), err
+	return Uid(((int64(uidType) & typeMaxValue) << (typeOffset)) |
+			((int64(Node) & nodeMaxValue) << (nodeOffset)) |
+			((int64(timestamp) & timestampMaxValue) << (timestampOffset)) |
+			(int64(offset) & uniqueOffsetMaxValue)), err
 }
 
 // Type returns the uid's type
 func (t Uid) Type() int64 {
-	return ((int64(t) >> (typeOffset)) & int64(0x1FF))
+	return ((int64(t) >> (typeOffset)) & typeMaxValue)
 }
 
 // Node returns the node on which this uid has been created on
 func (t Uid) Node() int64 {
-	return ((int64(t) >> (nodeOffset)) & int64(0x1F))
+	return ((int64(t) >> (nodeOffset)) & nodeMaxValue)
 }
 
 // Timestamp returns the timestamp of this uid
 func (t Uid) Timestamp() int64 {
-	return ((int64(t) >> (timestampOffset)) & int64(0xFFFFFFFF))
+	return ((int64(t) >> (timestampOffset)) & timestampMaxValue)
 }
 
 // Offset returns the unique offset of this uid
 func (t Uid) Offset() int64 {
-	return (int64(t) & int64(0xFFFF))
+	return (int64(t) & uniqueOffsetMaxValue)
 }
 
 // String: Uid implements the Stringer interface

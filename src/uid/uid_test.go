@@ -79,3 +79,16 @@ func TestOverflows(t *testing.T) {
 		t.Error("Offset overflow not detected")
 	}
 }
+
+func BenchmarkTestNew(b *testing.B) {
+	b.StopTimer()
+	var idType int64 = 1
+	var timestamp int64 = 1
+	var Node int64 = 1
+	var offset int64 = 1
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = New(idType, Node, timestamp, offset)
+	}
+}
