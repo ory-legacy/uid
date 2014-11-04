@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"log"
@@ -33,6 +33,7 @@ func main() {
 			log.Fatal("Server error: ", err)
 		}
 		result = call.Reply.(*uid.Uid)
-		fmt.Printf("Identifier %s %d created \n", result, result)
+		text, _ := result.MarshalText()
+		fmt.Printf("Identifier %s %d %s created \n", result, result, text)
 	}
 }

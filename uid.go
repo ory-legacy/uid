@@ -13,20 +13,23 @@ type Identifier interface {
 }
 
 // The Uid type is a long
-type Uid int64
+type Uid uint64
 
-// Highest bit is 0 for serialization algorithm
-var serializationOffset uint32 = 64 - 1
+var intToCharMap = []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+	'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
+	'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
+	'4', '5', '6', '7', '8', '9', '_', '-'}
 
 // Next 9 bits are type
 // Maximum value: 511
-var typeOffset uint32 = serializationOffset - 9
+var typeOffset uint32 = 64 - 9
 var typeMaxValue int64 = maxUnSignedValue(9)
 
 // Next 8 bits are node id (the service node which created this uid)
-// Maximum value: 255
-var nodeOffset uint32 = typeOffset - 8
-var nodeMaxValue int64 = maxUnSignedValue(8)
+// Maximum value: 511
+var nodeOffset uint32 = typeOffset - 9
+var nodeMaxValue int64 = maxUnSignedValue(9)
 
 // Next 32 bits are the timestamp
 // Maximum value: signed int32
@@ -60,10 +63,10 @@ func New(uidType int64, Node int64, timestamp int64, offset int64) (Uid, error) 
 		return 0, errors.New("Offset overflow")
 	}
 
-	return Uid(((int64(uidType) & typeMaxValue) << (typeOffset)) |
-			((int64(Node) & nodeMaxValue) << (nodeOffset)) |
-			((int64(timestamp) & timestampMaxValue) << (timestampOffset)) |
-			(int64(offset) & uniqueOffsetMaxValue)), err
+	return Uid(((int64(uidType)&typeMaxValue)<<(typeOffset)) |
+			((int64(Node)&nodeMaxValue)<<(nodeOffset)) |
+			((int64(timestamp)&timestampMaxValue)<<(timestampOffset)) |
+			(int64(offset)&uniqueOffsetMaxValue)), err
 }
 
 // Type returns the uid's type
@@ -89,6 +92,33 @@ func (t Uid) Offset() int64 {
 // String: Uid implements the Stringer interface
 func (t Uid) String() string {
 	return strconv.FormatInt(int64(t), 10)
+}
+
+func (t Uid) MarshalText() (text []byte, err error) {
+	text = make([]byte,11)
+	length := int64(len(intToCharMap))
+	id := int64(t)
+
+	for i := 0; i < 11 ; i++ {
+		rest := id % length
+		text[i] = intToCharMap[rest]
+		id = id/length
+	}
+
+	return text, err
+}
+
+func (t Uid) UnmarshalText(text []byte) (err error) {
+	length := int64(len(intToCharMap))
+	id := int64(t)
+
+	for i := 0; i < 11 ; i++ {
+		rest := id % length
+		text[i] = intToCharMap[rest]
+		id = id/length
+	}
+
+	return err
 }
 
 // maxSignedValue returns the maximum value of n signed bits
