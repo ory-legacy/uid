@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"math"
 	"errors"
+	"fmt"
 )
 
 // Identifier is an interface for setting and getting uids
@@ -20,6 +21,8 @@ var intToCharMap = []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
 	'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
 	'4', '5', '6', '7', '8', '9', '_', '-'}
+
+var charToIntMap = make(map[byte]int)
 
 // Next 9 bits are type
 // Maximum value: 511
@@ -44,29 +47,31 @@ var uniqueOffsetMaxValue int64 = maxUnSignedValue(14)
 // New creates a new unique identifier taking into account
 // the uid's type, the node which created this uid, the timestamp
 // of the creation and an offset to ensure uniqueness
-func New(uidType int64, Node int64, timestamp int64, offset int64) (Uid, error) {
+func New(uidType int64, Node int64, timestamp int64, offset int64) (*Uid, error) {
 	var err error
 
 	if int64(timestamp) > timestampMaxValue {
-		return 0, errors.New("Timestamp overflow")
+		return new(Uid), errors.New("Timestamp overflow")
 	}
 
 	if int64(Node) > nodeMaxValue {
-		return 0, errors.New("Node overflow")
+		return new(Uid), errors.New("Node overflow")
 	}
 
 	if int64(uidType) > typeMaxValue {
-		return 0, errors.New("Type overflow")
+		return new(Uid), errors.New("Type overflow")
 	}
 
 	if int64(offset) > uniqueOffsetMaxValue {
-		return 0, errors.New("Offset overflow")
+		return new(Uid), errors.New("Offset overflow")
 	}
 
-	return Uid(((int64(uidType)&typeMaxValue)<<(typeOffset)) |
-			((int64(Node)&nodeMaxValue)<<(nodeOffset)) |
+	id := Uid(((int64(uidType)&typeMaxValue)<<(typeOffset))|
+			((int64(Node)&nodeMaxValue)<<(nodeOffset))|
 			((int64(timestamp)&timestampMaxValue)<<(timestampOffset)) |
-			(int64(offset)&uniqueOffsetMaxValue)), err
+			(int64(offset)&uniqueOffsetMaxValue))
+
+	return &id, err
 }
 
 // Type returns the uid's type
@@ -95,7 +100,7 @@ func (t Uid) String() string {
 }
 
 func (t Uid) MarshalText() (text []byte, err error) {
-	text = make([]byte,11)
+	text = make([]byte, 11)
 	length := int64(len(intToCharMap))
 	id := int64(t)
 
@@ -108,14 +113,14 @@ func (t Uid) MarshalText() (text []byte, err error) {
 	return text, err
 }
 
-func (t Uid) UnmarshalText(text []byte) (err error) {
-	length := int64(len(intToCharMap))
-	id := int64(t)
+func (t *Uid) UnmarshalText(text []byte) (err error) {
+	initCharToIntMap();
 
-	for i := 0; i < 11 ; i++ {
-		rest := id % length
-		text[i] = intToCharMap[rest]
-		id = id/length
+	for i, c := range text {
+
+		if val, ok := charToIntMap[c]; !ok {
+			return errors.New(fmt.Sprintf("%d is not in valid range of %d", val, len(charToIntMap)))
+		}
 	}
 
 	return err
@@ -131,4 +136,13 @@ func maxSignedValue(numberOfBits int32) int64 {
 // Example: maxValue(8) == 255
 func maxUnSignedValue(numberOfBits int32) int64 {
 	return int64(math.Pow(2, float64(numberOfBits))) - 1
+}
+
+// initCharToIntMap initializes the intToCharMap
+func initCharToIntMap() {
+	if len(charToIntMap) == 0 {
+		for k, v := range intToCharMap {
+			charToIntMap[v] = k
+		}
+	}
 }

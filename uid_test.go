@@ -31,6 +31,24 @@ func TestNew(t *testing.T) {
 	}
 }
 
+
+func TestMarshalling(t *testing.T) {
+	var idType int64 = 1
+	var timestamp int64 = 510239510
+	var Node int64 = 5
+	var offset int64 = 12345
+
+	obj, _ := New(idType, Node, timestamp, offset)
+	text, _ := obj.MarshalText();
+
+	marhsalled := new(Uid)
+	_ = marhsalled.UnmarshalText(text)
+
+	if obj != marhsalled {
+		t.Error(fmt.Sprintf("Marshalling failed", obj.Offset(), offset))
+	}
+}
+
 // TestMaxSignedValue tests the internal maxSignedValue method
 func TestMaxSignedValue(t *testing.T) {
 	if maxSignedValue(8) != 127 {

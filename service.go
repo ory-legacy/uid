@@ -36,7 +36,7 @@ func (t *Service) Create(args *CreatorArguments, reply *Uid) error {
 	}
 	t.Mutex.Unlock()
 
-	*reply, _ = New(args.Type, t.Id, now, t.count)
+	reply, _ = New(args.Type, t.Id, now, t.count)
 
 	return nil
 }
