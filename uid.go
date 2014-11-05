@@ -1,10 +1,9 @@
 package uid
 
 import (
-	"strconv"
 	"math"
 	"errors"
-	"fmt"
+	"strconv"
 )
 
 // Identifier is an interface for setting and getting uids
@@ -16,20 +15,12 @@ type Identifier interface {
 // The Uid type is a long
 type Uid uint64
 
-var intToCharMap = []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-	'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
-	'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
-	'4', '5', '6', '7', '8', '9', '_', '-'}
-
-var charToIntMap = make(map[byte]int)
-
 // Next 9 bits are type
 // Maximum value: 511
 var typeOffset uint32 = 64 - 9
 var typeMaxValue int64 = maxUnSignedValue(9)
 
-// Next 8 bits are node id (the service node which created this uid)
+// Next 9 bits are node id (the service node which created this uid)
 // Maximum value: 511
 var nodeOffset uint32 = typeOffset - 9
 var nodeMaxValue int64 = maxUnSignedValue(9)
@@ -96,33 +87,21 @@ func (t Uid) Offset() int64 {
 
 // String: Uid implements the Stringer interface
 func (t Uid) String() string {
-	return strconv.FormatInt(int64(t), 10)
+	return strconv.FormatUint(uint64(t), 36)
 }
 
 func (t Uid) MarshalText() (text []byte, err error) {
-	text = make([]byte, 11)
-	length := int64(len(intToCharMap))
-	id := int64(t)
-
-	for i := 0; i < 11 ; i++ {
-		rest := id % length
-		text[i] = intToCharMap[rest]
-		id = id/length
-	}
-
+	s := strconv.FormatUint(uint64(t), 36)
+	text = []byte(s)
 	return text, err
 }
 
 func (t *Uid) UnmarshalText(text []byte) (err error) {
-	initCharToIntMap();
-
-	for i, c := range text {
-
-		if val, ok := charToIntMap[c]; !ok {
-			return errors.New(fmt.Sprintf("%d is not in valid range of %d", val, len(charToIntMap)))
-		}
+	id, err := strconv.ParseUint(string(text), 36, 64)
+	if err != nil {
+		return err
 	}
-
+	*t = Uid(id)
 	return err
 }
 
@@ -136,13 +115,4 @@ func maxSignedValue(numberOfBits int32) int64 {
 // Example: maxValue(8) == 255
 func maxUnSignedValue(numberOfBits int32) int64 {
 	return int64(math.Pow(2, float64(numberOfBits))) - 1
-}
-
-// initCharToIntMap initializes the intToCharMap
-func initCharToIntMap() {
-	if len(charToIntMap) == 0 {
-		for k, v := range intToCharMap {
-			charToIntMap[v] = k
-		}
-	}
 }

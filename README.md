@@ -19,10 +19,8 @@ var idType int64 = 123
 var timestamp int64 = 124124
 var Node int64 = 321
 var offset int64 = 313
-var err error
-var id uid.Uid
 
-id, err = New(idType, Node, timestamp, offset)
+id, err := New(idType, Node, timestamp, offset)
 
 if err != nil {
     // Something happened
@@ -38,8 +36,6 @@ See `examples/server.go` and `examples/client.go` for example implementations.
 
 ## TBDs
 
-* Add more test cases
 * Add test cases for the service wrapper
 * Test RPC server/client
-* Improve string serialisation
 * Use uint32 / byte / uint16 instead of int64 at: type, node, offset

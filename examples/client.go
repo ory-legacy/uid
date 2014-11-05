@@ -9,31 +9,19 @@ import (
 
 func main() {
 	client, err := rpc.DialHTTP("tcp", "localhost:4001")
-	count := 2
 
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
 
 	args := &uid.CreatorArguments{7}
-	res := make(chan *rpc.Call, count)
 
-	//var result uid.Uid
-	//client.Call("Service.Create", args, &result)
-	//fmt.Printf("Identifier: %d \n", result)
+	var result uid.Uid
 
-	for i := 0; i < count; i++ {
-		var result uid.Uid
-		client.Go("Service.Create", args, &result, res)
+	err = client.Call("Service.New", args, &result)
+	if err != nil {
+		log.Fatal("Call error:", err)
 	}
 
-	for call := range res {
-		var result *uid.Uid
-		if call.Error != nil {
-			log.Fatal("Server error: ", err)
-		}
-		result = call.Reply.(*uid.Uid)
-		text, _ := result.MarshalText()
-		fmt.Printf("Identifier %s %d %s created \n", result, result, text)
-	}
+	fmt.Printf("Identifier %d (%s) at adress %X created \n", result, result.String(), &result)
 }

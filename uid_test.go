@@ -44,8 +44,8 @@ func TestMarshalling(t *testing.T) {
 	marhsalled := new(Uid)
 	_ = marhsalled.UnmarshalText(text)
 
-	if obj != marhsalled {
-		t.Error(fmt.Sprintf("Marshalling failed", obj.Offset(), offset))
+	if *marhsalled != *obj {
+		t.Error(fmt.Sprintf("Marshalling failed: %d should be %d", *marhsalled, *obj))
 	}
 }
 
@@ -84,7 +84,7 @@ func TestOverflows(t *testing.T) {
 	}
 
 	timestamp = 1
-	Node = maxUnSignedValue(8) + 1
+	Node = maxUnSignedValue(9) + 1
 	_, err = New(idType, Node, timestamp, offset)
 	if err == nil {
 		t.Error("Node overflow not detected")

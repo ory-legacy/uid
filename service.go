@@ -24,7 +24,7 @@ type CreatorArguments struct {
 }
 
 // Create is a RPC wrapper for uid's New method
-func (t *Service) Create(args *CreatorArguments, reply *Uid) error {
+func (t *Service) New(args *CreatorArguments, reply *Uid) error {
 	now := int64(time.Now().Unix())
 
 	t.Mutex.Lock()
@@ -36,7 +36,13 @@ func (t *Service) Create(args *CreatorArguments, reply *Uid) error {
 	}
 	t.Mutex.Unlock()
 
-	reply, _ = New(args.Type, t.Id, now, t.count)
+	id, err := New(args.Type, t.Id, now, t.count)
+
+	if err != nil {
+		return err
+	}
+
+	*reply = *id
 
 	return nil
 }
